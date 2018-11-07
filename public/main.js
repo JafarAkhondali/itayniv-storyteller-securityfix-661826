@@ -1,0 +1,276 @@
+let posOne = new THREE.Vector3( 100, 0, 200 );
+let currColor = 0;
+let camera, scene, renderer;
+let mesh;
+let targetMesh;
+let phase = 4;
+let delta = 5;
+let deltaoneNumber = 0;
+let timecounter = 0;
+let pos = { x : 0, y: 0, z:0 };
+let newPos = {x: 0, y: 0, z:0 }
+let targetPos = { x : 0, y: 0, z: 0 };
+let phasesin = 0;
+let blinkOpacity = 0;
+let gameTime = 60;
+let gameOn = false;
+let startingValue = 120;
+
+
+let lstm;
+let textInput;
+let tempSlider;
+let lengthSlider;
+let netTemperature;
+
+let userStory = [];
+let storyBuild = [];
+
+
+
+let drawingClasses = ["alarm_clock",	"ambulance",	"angel", "ant", "antyoga",
+"backpack",	"barn",	"basket",	"bear",	"bee",
+"beeflower",	"bicycle",	"bird",	"book",	"brain",
+"bridge",	"bulldozer",	"bus",	"butterfly",	"cactus",
+"calendar",	"castle",	"cat",	"catbus",	"catpig",
+"chair",	"couch", "crab",	"crabchair",	"crabrabbitfacepig",
+"cruise_ship",	"diving_board",	"dog",	"dogbunny",	"dolphin",
+"duck",	"elephant",	"elephantpig", "eye",	"face",
+"fan",	"fire_hydrant",	"firetruck",	"flamingo",	"flower",
+"floweryoga",	"frog",	"frogsofa",	"garden",	"hand",
+"hedgeberry",	"hedgehog",	"helicopter",	"kangaroo",	"key",
+"lantern",	"lighthouse",	"lion",	"lionsheep",	"lobster",
+"map",	"mermaid",	"monapassport",	"monkey",	"mosquito",
+"octopus",	"owl",	"paintbrush",	"palm_tree",	"parrot",
+"passport",	"peas",	"penguin",	"pig",	"pigsheep",
+"pineapple",	"pool",	"postcard",	"power_outlet",	"rabbit",
+"rabbitturtle",	"radio",	"radioface",	"rain",	"rhinoceros",
+"rifle",	"roller_coaster",	"sandwich",	"scorpion",	"sea_turtle",
+"sheep",	"skull",	"snail",	"snowflake",	"speedboat",
+"spider",	"squirrel",	"steak",	"stove",	"strawberry",
+"swan",	"swing_set",	"the_mona_lisa",	"tiger",	"toothbrush",
+"toothpaste",	"tractor",	"trombone",	"truck	whale",
+"windmill",	"yoga",	"yogabicycle",	"everything"];
+
+
+function convertRange( value, r1, r2 ) {
+  return ( value - r1[ 0 ] ) * ( r2[ 1 ] - r2[ 0 ] ) / ( r1[ 1 ] - r1[ 0 ] ) + r2[ 0 ];
+}
+
+const SpeechRecognition = webkitSpeechRecognition;
+const getSpeech = () => {
+  const recognition = new SpeechRecognition();
+  recognition.lang = 'en-US';
+  recognition.start();
+  // recognition.continuous = false;
+  recognition.interimResults = true;
+  // console.log('started rec');
+
+  recognition.onresult = event => {
+    const speechResult = event.results[0][0].transcript;
+    // console.log('result: ' + speechResult);
+    // console.log('confidence: ' + event.results[0][0].confidence);
+
+    generateNewInput(speechResult);
+
+
+  };
+
+  recognition.onend = () => {
+    // console.log('it is over');
+    // for "endless" mode, comment out the next line and uncomment getSpeech()
+    // recognition.stop();
+    getSpeech();
+
+  };
+
+  recognition.onerror = event => {
+    // console.log('something went wrong: ' + event.error);
+  };
+};
+
+function splitInput(inputText){
+  var newtextArr = inputText.toLowerCase().split(" ");
+
+  for (var i = 0; i < newtextArr.length; i++) {
+    storyBuild.push(newtextArr[i]);
+  }
+  // console.log(newtextArr);
+  // console.log('textarray input', newtextArr);
+}
+
+
+function generateNewInput(text){
+
+  walk(text); // word2vec
+
+  let thistextToString = text.toLowerCase().split(" ");
+  splitInput(text);
+  let storyBuildText = storyBuild.toString();
+  console.log(storyBuildText);
+  let replace = storyBuildText.replace(/,/g, " "); // replace ','
+  console.log(replace);
+  generate(replace);
+
+  addSentence(text, "voice / input");
+
+}
+
+
+init();
+
+function modelReady() {
+  // document.getElementById('status').innerHTML = 'Model Loaded';
+  console.log("model loaded");
+}
+
+function init() {
+
+  sliderChange1(.5);
+  sliderChange2(startingValue);
+  // Create the LSTM Generator passing it the model directory
+  // lstm = ml5.LSTMGenerator('/models/childrens/', modelReady);
+  lstm = ml5.charRNN('/models/childrens/', modelReady);
+  word2vec = ml5.word2vec('/models/wordvecs10000.json', modelReady);
+
+  getSpeech();
+  // window.addEventListener( 'resize', onWindowResize, false );
+
+}
+
+
+
+function generate(texttoGenerateFrom) {
+
+  let original = texttoGenerateFrom;
+  let txt = original.toLowerCase();
+  // Check if there's something
+  if (txt.length > 0) {
+    // Here is the data for the LSTM generator
+    let data = {
+      seed: txt,
+      temperature: netTemperature,
+      length: generated_length
+    };
+    // Generate text with the lstm
+    lstm.generate(data, gotData);
+    // Update the DOM elements with typed and generated text
+    function gotData(err, result) {
+
+      let lstmRes = result.sample;
+      addSentence(lstmRes , "net");
+      splitResult(lstmRes);
+      checkIllustration(lstmRes);
+
+
+    }
+  }
+}
+
+function splitResult(inputText){
+  var newtextArr = inputText.toLowerCase().split(" ");
+  console.log("newtextArr", newtextArr);
+  console.log("storyBuild", storyBuild);
+
+  for (var i = 0; i < newtextArr.length; i++) {
+    storyBuild.push(newtextArr[i]);
+  }
+  console.log(storyBuild);
+}
+
+
+function checkIllustration(string){
+
+  console.log("checking result");
+  let textToCheck = string.toLowerCase().split(" ");
+
+  for (var i = 0; i < textToCheck.length; i++) {
+    for (var y = 0; y < drawingClasses.length; y++) {
+      if (textToCheck.indexOf(drawingClasses[y]) > -1) {
+        //In the array!
+        console.log("its in");
+      } else {
+        //Not in the array
+        console.log("its not");
+      }
+    }
+  }
+}
+
+function addSentence(result, source){
+  // console.log(result," " ,source);
+  if (source == "net"){
+    // console.log("Net");
+    let para = document.createElement("p");
+    para.classList.add("net");
+    let node = document.createTextNode(result);
+    para.appendChild(node);
+    let element = document.getElementById("story");
+    element.appendChild(para);
+    element.classList.add("net");
+
+  } else {
+    // console.log("Voice")
+    let para = document.createElement("p");
+    para.classList.add("voice");
+    let node = document.createTextNode(result);
+    para.appendChild(node);
+    let element = document.getElementById("story");
+    element.appendChild(para);
+  }
+}
+
+
+
+
+////////word2vec////////
+
+
+function walk(word) {
+  word2vec.nearest(word, 10).then(result => {
+    // console.log('word2Vec', result);
+    // let next = random(result);
+    // current = next.word;
+    // select('#walk').html(current);
+  });
+}
+
+
+
+function generateChain(){
+  // console.log('click');
+  let textboxinput = document.getElementById("textbox1").value;
+  generateNewInput(textboxinput);
+  setTimeout(() => document.getElementById('textbox1').value = "", 2000);
+
+  // word2vec.subtract(["passport", "yoga"], 6, (e,d) => {
+  //   console.log('passport - yoga', d)
+  // });
+  //
+  // word2vec.average(["land", "ocean"], 2, (e,d) => {
+  //   console.log('average land / ocean', d)
+  // });
+  //
+  // word2vec.add(["bicycle", "butterfly"], 10, (e,d) => {
+  //   console.log('add crab / snail', d)
+  // });
+
+}
+
+
+
+function sliderChange1(val) {
+  document.getElementById('output1').innerHTML = val;
+  netTemperature = parseFloat(val);
+  // console.log("netTemperature", netTemperature);
+}
+
+document.getElementById('slider1').value = .5;
+
+function sliderChange2(val) {
+  document.getElementById('output2').innerHTML = val;
+  generated_length = parseInt(val);
+  // console.log("generated_length", generated_length);
+}
+
+document.getElementById('slider2').value = startingValue;
