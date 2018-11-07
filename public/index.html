@@ -66,33 +66,27 @@
           </div>
 
           <div class="col-sm-4">
-            <div id="story">
+            <div id="prompt">
               <p id="recordedText">Tell me a story about...</p>
+            </div>
+            <div id="story">
+              <p id="recordedText"></p>
             </div>
           </div>
           <div class="col-sm-4">
+            <div id="illustrations">
+              <!-- <button >Draw</button> -->
+              <!-- onclick="generateChain()" -->
+              <button id="draw" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" >
+                🎨
+              </button>
+
+            </div>
+
           </div>
         </div>
       </div>
     </div>
-
-
-
-    <!--
-    <h1>Interactive LSTM Text Generation with childrens books</h1>
-    <h2>This example uses a pre-trained model on a corpus of childrens books</h2>
-    <textarea id="textInput" style="width: 300px; height: 50px;" placeholder="type here"></textarea>
-    <br/> length:
-    <input id="lenSlider" type="range" min="1" max="100" value="20"> <span id="length">20</span>
-    <br/> temperature:
-    <input id="tempSlider" type="range" min="0" max="1" step="0.01"><span id="temperature">0.5</span>
-    <p id="status">Loading Model</p>
-    <p id="result">
-    <span id="original"></span><span id="prediction"></span>
-  </p> -->
-
-
-
 
   <script src="main.js"></script>
 

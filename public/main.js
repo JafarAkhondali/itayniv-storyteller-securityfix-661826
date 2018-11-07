@@ -25,6 +25,7 @@ let netTemperature;
 
 let userStory = [];
 let storyBuild = [];
+let currIllustration = '';
 
 
 
@@ -72,7 +73,6 @@ const getSpeech = () => {
     // console.log('confidence: ' + event.results[0][0].confidence);
 
     generateNewInput(speechResult);
-
 
   };
 
@@ -188,13 +188,16 @@ function checkIllustration(string){
     for (var y = 0; y < drawingClasses.length; y++) {
       if (textToCheck.indexOf(drawingClasses[y]) > -1) {
         //In the array!
-        console.log("its in");
+        console.log("its in",drawingClasses[y]);
+        currIllustration = drawingClasses[y];
+        // setup(currIllustration);
       } else {
         //Not in the array
         console.log("its not");
       }
     }
   }
+
 }
 
 function addSentence(result, source){
@@ -274,3 +277,68 @@ function sliderChange2(val) {
 }
 
 document.getElementById('slider2').value = startingValue;
+
+
+
+
+///////sketchrnn
+
+
+// Copyright (c) 2018 ml5
+//
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
+
+/* ===
+ml5 Example
+SketchRNN
+=== */
+
+let sketchmodel;
+let previous_pen = 'down';
+let x, y;
+let sketch;
+
+function setup(currIllustration) {
+  createCanvas(500, 600);
+
+  // background(255);
+  sketchmodel = ml5.SketchRNN('cat', sketchmodelReady);
+  let button = select('#draw');
+  button.mousePressed(startDrawing);
+}
+
+function startDrawing() {
+  x = width / 2;
+  y = height / 2;
+  background(255);
+  sketchmodel.reset();
+  sketchmodel.generate(gotSketch);
+}
+
+function draw() {
+  if (sketch) {
+    if (previous_pen == 'down') {
+      stroke(10,50,255);
+      strokeWeight(5.0);
+      line(x, y, x + sketch.dx, y + sketch.dy);
+    }
+    x += sketch.dx;
+    y += sketch.dy;
+    previous_pen = sketch.pen;
+
+    if (sketch.pen !== 'end') {
+      sketch = null;
+      sketchmodel.generate(gotSketch);
+    }
+  }
+}
+
+function gotSketch(err, s) {
+  sketch = s;
+}
+
+function sketchmodelReady() {
+  // select('#status').html('Model Loaded');
+  // startDrawing();
+}
