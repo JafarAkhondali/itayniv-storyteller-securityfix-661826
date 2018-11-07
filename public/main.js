@@ -188,12 +188,12 @@ function checkIllustration(string){
     for (var y = 0; y < drawingClasses.length; y++) {
       if (textToCheck.indexOf(drawingClasses[y]) > -1) {
         //In the array!
-        console.log("its in",drawingClasses[y]);
+        console.log("found an illustration! ",drawingClasses[y]);
         currIllustration = drawingClasses[y];
-        // setup(currIllustration);
+        setup(currIllustration);
       } else {
         //Not in the array
-        console.log("its not");
+        console.log("didnt find an illustration");
       }
     }
   }
